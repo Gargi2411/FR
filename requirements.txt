@@ -1,0 +1,11 @@
+torch
+torchvision
+opencv-python
+numpy
+scipy
+onnx
+onnxruntime
+tqdm
+sqlite-utils
+pyyaml
+cryptography
