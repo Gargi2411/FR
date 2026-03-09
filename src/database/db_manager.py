@@ -14,28 +14,45 @@ class DatabaseManager:
         with self._connect() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS employees (
-                    id TEXT PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT,
                     embedding BLOB
                 )
             """)
 
-    def insert_employee(self, emp_id: str, name: str, embedding: np.ndarray):
+    def insert_employee(self, name: str, embedding: np.ndarray):
         embedding_blob = embedding.astype(np.float32).tobytes()
 
         with self._connect() as conn:
             conn.execute(
-                "INSERT OR REPLACE INTO employees (id, name, embedding) VALUES (?, ?, ?)",
-                (emp_id, name, embedding_blob)
+                "INSERT INTO employees (name, embedding) VALUES (?, ?)",
+                (name, embedding_blob)
+            )
+
+    def insert_many_embeddings(self, names, embeddings):
+        with self._connect() as conn:
+            data = []
+
+            for name, embedding in zip(names, embeddings):
+                blob = embedding.astype(np.float32).tobytes()
+                data.append((name, blob))
+
+            conn.executemany(
+                "INSERT INTO employees (name, embedding) VALUES (?, ?)",
+                data
             )
 
     def get_all_embeddings(self):
         with self._connect() as conn:
-            rows = conn.execute("SELECT id, name, embedding FROM employees").fetchall()
+            rows = conn.execute("SELECT name, embedding FROM employees").fetchall()
 
         result = []
-        for emp_id, name, blob in rows:
+
+        for name, blob in rows:
             embedding = np.frombuffer(blob, dtype=np.float32)
-            result.append((emp_id, name, embedding))
+            result.append({
+                "name": name,
+                "embedding": embedding
+            })
 
         return result

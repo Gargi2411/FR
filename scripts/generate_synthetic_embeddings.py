@@ -9,25 +9,43 @@ db = DatabaseManager(DB_PATH)
 
 NUM_EMPLOYEES = 300000
 EMBEDDING_SIZE = 512
+BATCH_SIZE = 5000
+
 
 def generate_embedding():
     vec = np.random.randn(EMBEDDING_SIZE)
     vec = vec / np.linalg.norm(vec)
     return vec
 
-def main():
-    for i in range(NUM_EMPLOYEES):
-        employee_id = f"emp_{i}"
-        name = f"Synthetic_{i}"
 
+def main():
+
+    names_batch = []
+    embeddings_batch = []
+
+    for i in range(NUM_EMPLOYEES):
+
+        name = f"Synthetic_{i}"
         embedding = generate_embedding()
 
-        db.insert_employee(employee_id, name, embedding)
+        names_batch.append(name)
+        embeddings_batch.append(embedding)
 
-        if i % 10000 == 0:
-            print(f"{i} embeddings inserted")
+        if len(names_batch) == BATCH_SIZE:
+
+            db.insert_many_embeddings(names_batch, embeddings_batch)
+
+            print(f"{i+1} embeddings inserted")
+
+            names_batch = []
+            embeddings_batch = []
+
+    # insert remaining
+    if names_batch:
+        db.insert_many_embeddings(names_batch, embeddings_batch)
 
     print("Done generating synthetic embeddings.")
+
 
 if __name__ == "__main__":
     main()

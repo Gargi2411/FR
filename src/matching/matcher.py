@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Matcher:
     def __init__(self, threshold=0.45):
         self.threshold = threshold
@@ -8,7 +9,6 @@ class Matcher:
         a = np.array(a)
         b = np.array(b)
 
-        # Avoid division by zero
         if np.linalg.norm(a) == 0 or np.linalg.norm(b) == 0:
             return -1
 
@@ -18,6 +18,7 @@ class Matcher:
         return float(np.dot(a, b))
 
     def match(self, query_embedding, database_embeddings):
+
         if not database_embeddings:
             return {
                 "matched": False,
@@ -27,23 +28,26 @@ class Matcher:
             }
 
         best_score = -1.0
-        best_match = None
+        best_match_name = None
 
-        for emp_id, name, db_embedding in database_embeddings:
+        for employee in database_embeddings:
+
+            name = employee["name"]
+            db_embedding = employee["embedding"]
+
             score = self.cosine_similarity(query_embedding, db_embedding)
 
             if score > best_score:
                 best_score = score
-                best_match = (emp_id, name)
+                best_match_name = name
 
-        # Debug print (optional)
         print(f"Best similarity score: {best_score:.4f}")
 
         if best_score >= self.threshold:
             return {
                 "matched": True,
-                "employee_id": best_match[0],
-                "name": best_match[1],
+                "employee_id": None,
+                "name": best_match_name,
                 "score": best_score
             }
         else:
